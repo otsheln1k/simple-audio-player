@@ -32,6 +32,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     private static final int REQ_START_SERVICE = 1;
+    private static final int REQ_STOP_PLAYBACK = 1;
     private static final int NOTIF_ID = 1;   // TODO: make app-global resource
     private static final String NOTIF_CHANNEL = "player-service";
 
@@ -50,11 +51,10 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     private Notification makeNotification(String title) {
-        Intent notifIntent =
-                new Intent(this, PlayerActivity.class);
-        PendingIntent pendingIntent =
+        PendingIntent srvPintent =
                 PendingIntent.getActivity(
-                        this, REQ_START_SERVICE, notifIntent, 0);
+                        this, REQ_START_SERVICE,
+                        new Intent(this, PlayerActivity.class), 0);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             NotificationManagerCompat nman =
@@ -75,7 +75,19 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         builder.setContentTitle("Now playing");
         builder.setContentText(title);
         builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
-        builder.setContentIntent(pendingIntent);
+        builder.setContentIntent(srvPintent);
+
+        androidx.media.app.NotificationCompat.MediaStyle style =
+                new androidx.media.app.NotificationCompat.MediaStyle();
+        style.setShowActionsInCompactView(0);  // Stop button
+        builder.setStyle(style);
+
+        Intent stopIntent = new Intent(this, PlayerBroadcastReceiver.class);
+        stopIntent.setAction(PlayerBroadcastReceiver.ACTION_STOP);
+        PendingIntent stopPintent =
+                PendingIntent.getBroadcast(
+                        this, REQ_STOP_PLAYBACK, stopIntent, 0);
+        builder.addAction(R.drawable.ic_baseline_stop_24, "Stop", stopPintent);
 
         return builder.build();
     }
