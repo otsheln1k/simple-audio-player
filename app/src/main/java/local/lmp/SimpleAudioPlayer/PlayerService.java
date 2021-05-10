@@ -65,6 +65,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                             NOTIF_CHANNEL,
                             "Player Service",
                             NotificationManager.IMPORTANCE_DEFAULT);
+            chan.setImportance(NotificationManager.IMPORTANCE_LOW);
             nman.createNotificationChannel(chan);
         }
 
