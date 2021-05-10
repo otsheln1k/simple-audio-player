@@ -70,7 +70,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, NOTIF_CHANNEL);
-        builder.setSmallIcon(R.mipmap.ic_launcher_round);
+        builder.setSmallIcon(R.drawable.ic_baseline_queue_music_24);
         builder.setContentTitle("Now playing");
         builder.setContentText(title);
         builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
