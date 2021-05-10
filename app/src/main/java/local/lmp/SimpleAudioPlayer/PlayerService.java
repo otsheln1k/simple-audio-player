@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.IBinder;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import java.io.IOException;
 
@@ -35,6 +36,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     private static final String NOTIF_CHANNEL = "player-service";
 
     private MediaPlayer m_player;
+    private Uri m_currentUri;
 
     public PlayerService() {
         m_player = new MediaPlayer();
@@ -47,7 +49,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void goForeground() {
+    private Notification makeNotification(String title) {
         Intent notifIntent =
                 new Intent(this, PlayerActivity.class);
         PendingIntent pendingIntent =
@@ -55,8 +57,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                         this, REQ_START_SERVICE, notifIntent, 0);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            NotificationManager nman =
-                    (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            NotificationManagerCompat nman =
+                    NotificationManagerCompat.from(this);
+
             NotificationChannel chan =
                     new NotificationChannel(
                             NOTIF_CHANNEL,
@@ -69,11 +72,15 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
                 new NotificationCompat.Builder(this, NOTIF_CHANNEL);
         builder.setSmallIcon(R.mipmap.ic_launcher_round);
         builder.setContentTitle("Now playing");
-        builder.setContentText("(nothing)");
+        builder.setContentText(title);
         builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
         builder.setContentIntent(pendingIntent);
 
-        Notification notif = builder.build();
+        return builder.build();
+    }
+
+    private void goForeground() {
+        Notification notif = makeNotification("(nothing)");
         startForeground(NOTIF_ID, notif);
     }
 
@@ -90,6 +97,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             e.printStackTrace();
             return;
         }
+        m_currentUri = uri;
         m_player.prepareAsync();
     }
 
@@ -106,5 +114,10 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     @Override
     public void onPrepared(MediaPlayer mp) {
         m_player.start();
+
+        String title = m_currentUri.getLastPathSegment();
+        Notification notif = makeNotification(title);
+        NotificationManagerCompat nman = NotificationManagerCompat.from(this);
+        nman.notify(NOTIF_ID, notif);
     }
 }
