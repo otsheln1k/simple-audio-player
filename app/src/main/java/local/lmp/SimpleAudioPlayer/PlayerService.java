@@ -39,7 +39,8 @@ public class PlayerService
     }
 
     private static final int REQ_START_SERVICE = 1;
-    private static final int REQ_STOP_PLAYBACK = 1;
+    private static final int REQ_RESTART_PLAYBACK = 2;
+    private static final int REQ_STOP_PLAYBACK = 3;
     private static final int NOTIF_ID = 1;   // TODO: make app-global resource
     private static final String NOTIF_CHANNEL = "player-service";
 
@@ -170,8 +171,16 @@ public class PlayerService
 
         androidx.media.app.NotificationCompat.MediaStyle style =
                 new androidx.media.app.NotificationCompat.MediaStyle();
-        style.setShowActionsInCompactView(0);  // Stop button
+        style.setShowActionsInCompactView(1);  // Stop button
         builder.setStyle(style);
+
+        Intent restartIntent = new Intent(this, PlayerBroadcastReceiver.class);
+        restartIntent.setAction(PlayerBroadcastReceiver.ACTION_RESTART);
+        PendingIntent restartPintent =
+                PendingIntent.getBroadcast(
+                        this, REQ_RESTART_PLAYBACK, restartIntent, 0);
+        builder.addAction(R.drawable.ic_baseline_skip_previous_24, "Restart",
+                restartPintent);
 
         Intent stopIntent = new Intent(this, PlayerBroadcastReceiver.class);
         stopIntent.setAction(PlayerBroadcastReceiver.ACTION_STOP);
