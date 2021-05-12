@@ -41,6 +41,8 @@ public class PlayerService
     private static final int REQ_START_SERVICE = 1;
     private static final int REQ_RESTART_PLAYBACK = 2;
     private static final int REQ_STOP_PLAYBACK = 3;
+    private static final int REQ_PAUSE_PLAYBACK = 4;
+    private static final int REQ_RESUME_PLAYBACK = 5;
     private static final int NOTIF_ID = 1;   // TODO: make app-global resource
     private static final String NOTIF_CHANNEL = "player-service";
 
@@ -75,6 +77,7 @@ public class PlayerService
 
     private void announceState(PlaybackState s) {
         _lastState = s;
+        repostNotif();
         for (OnPlaybackStateChanged l : _onPsc) {
             l.onPlaybackStateChanged(this, s);
         }
@@ -184,6 +187,16 @@ public class PlayerService
                 makeNotifBtnPintent(PlayerBroadcastReceiver.ACTION_RESTART,
                         REQ_RESTART_PLAYBACK));
 
+        if (_lastState == PlaybackState.PAUSED) {
+            builder.addAction(R.drawable.ic_baseline_play_arrow_24, "Play",
+                    makeNotifBtnPintent(PlayerBroadcastReceiver.ACTION_RESUME,
+                            REQ_RESUME_PLAYBACK));
+        } else {
+            builder.addAction(R.drawable.ic_baseline_pause_24, "Pause",
+                    makeNotifBtnPintent(PlayerBroadcastReceiver.ACTION_PAUSE,
+                            REQ_PAUSE_PLAYBACK));
+        }
+
         builder.addAction(R.drawable.ic_baseline_stop_24, "Stop",
                 makeNotifBtnPintent(PlayerBroadcastReceiver.ACTION_STOP,
                         REQ_STOP_PLAYBACK));
@@ -194,6 +207,13 @@ public class PlayerService
     private void goForeground() {
         Notification notif = makeNotification("(nothing)");
         startForeground(NOTIF_ID, notif);
+    }
+
+    private void repostNotif() {
+        String title = m_currentUri.getLastPathSegment();
+        Notification notif = makeNotification(title);
+        NotificationManagerCompat nman = NotificationManagerCompat.from(this);
+        nman.notify(NOTIF_ID, notif);
     }
 
     private void stopForeground() {
@@ -261,10 +281,7 @@ public class PlayerService
     public void onPrepared(MediaPlayer mp) {
         m_player.start();
 
-        String title = m_currentUri.getLastPathSegment();
-        Notification notif = makeNotification(title);
-        NotificationManagerCompat nman = NotificationManagerCompat.from(this);
-        nman.notify(NOTIF_ID, notif);
+        repostNotif();
 
         announceState(PlaybackState.PLAYING);
         announcePosition(0);

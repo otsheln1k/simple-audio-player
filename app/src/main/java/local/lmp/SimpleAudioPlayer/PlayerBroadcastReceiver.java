@@ -10,6 +10,10 @@ public class PlayerBroadcastReceiver extends BroadcastReceiver {
             = "local.lmp.SimpleAudioPlayer.RESTART";
     public static final String ACTION_STOP
             = "local.lmp.SimpleAudioPlayer.STOP";
+    public static final String ACTION_PAUSE
+            = "local.lmp.SimpleAudioPlayer.PAUSE";
+    public static final String ACTION_RESUME
+            = "local.lmp.SimpleAudioPlayer.RESUME";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -22,11 +26,17 @@ public class PlayerBroadcastReceiver extends BroadcastReceiver {
         PlayerService srv = binder.service();
 
         switch (intent.getAction()) {
+            case ACTION_RESTART:
+                srv.seekTo(0);
+                break;
             case ACTION_STOP:
                 srv.stop();
                 break;
-            case ACTION_RESTART:
-                srv.seekTo(0);
+            case ACTION_PAUSE:
+                srv.pause();
+                break;
+            case ACTION_RESUME:
+                srv.resume();
                 break;
         }
     }
