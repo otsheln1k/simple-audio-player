@@ -204,9 +204,15 @@ public class PlayerService
         startForeground(NOTIF_ID, notif);
     }
 
+    public String title() {
+        String last = m_currentUri.getLastPathSegment();
+        int lastslash = last.lastIndexOf('/');
+        String title = (lastslash < 0) ? last : last.substring(lastslash+1);
+        return title;
+    }
+
     private void repostNotif() {
-        String title = m_currentUri.getLastPathSegment();
-        Notification notif = makeNotification(title);
+        Notification notif = makeNotification(title());
         NotificationManagerCompat nman = NotificationManagerCompat.from(this);
         nman.notify(NOTIF_ID, notif);
     }

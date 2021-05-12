@@ -96,10 +96,10 @@ public class PlayerActivity extends AppCompatActivity implements PlayerService.O
     }
 
     private void updatePosition(int msec) {
-        TextView progress = findViewById(R.id.progress);
+        TextView progressview = findViewById(R.id.progress);
         int sec = (msec + 500) / 1000;
         int total = (m_service.getDuration() + 500) / 1000;
-        progress.setText(String.format(
+        progressview.setText(String.format(
                 Locale.getDefault(),
                 "%d:%02d / %d:%02d",
                 sec / 60, sec % 60, total / 60, total % 60));
@@ -108,6 +108,8 @@ public class PlayerActivity extends AppCompatActivity implements PlayerService.O
     @Override
     public void onPlaybackStateChanged(PlayerService ps,
                                        PlayerService.PlaybackState st) {
+        TextView titleview = findViewById(R.id.songtitle);
+        titleview.setText(ps.title());
         switch (st) {
             case STOPPED:
                 finish();
