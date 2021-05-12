@@ -9,14 +9,20 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
-public class PlayerService extends Service implements MediaPlayer.OnPreparedListener {
+public class PlayerService
+        extends Service
+        implements MediaPlayer.OnPreparedListener,
+        MediaPlayer.OnSeekCompleteListener {
 
     // TODO: read attached URI:
     // 1. Load file
@@ -36,12 +42,95 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     private static final int NOTIF_ID = 1;   // TODO: make app-global resource
     private static final String NOTIF_CHANNEL = "player-service";
 
-    private MediaPlayer m_player;
+    private final MediaPlayer m_player;
     private Uri m_currentUri;
+
+    private boolean m_doReschedule = false;
+    private Handler m_handler = new Handler (Looper.getMainLooper());
+
+    public enum PlaybackState {
+        STOPPED,
+        PLAYING,
+        PAUSED,
+    }
+
+    public interface OnPlaybackStateChanged {
+        void onPlaybackStateChanged(PlayerService ps, PlaybackState st);
+    }
+    private final ArrayList<OnPlaybackStateChanged> _onPsc = new ArrayList<>();
+    PlaybackState _lastState = null;
+
+    public void addPlaybackStateListener(OnPlaybackStateChanged l) {
+        _onPsc.add(l);
+        if (_lastState != null) {
+            l.onPlaybackStateChanged(this, _lastState);
+        }
+    }
+
+    public void removePlaybackStateListener(OnPlaybackStateChanged l) {
+        _onPsc.remove(l);
+    }
+
+    private void announceState(PlaybackState s) {
+        _lastState = s;
+        for (OnPlaybackStateChanged l : _onPsc) {
+            l.onPlaybackStateChanged(this, s);
+        }
+    }
+
+    public interface OnPlaybackPositionChanged {
+        void onPlaybackPositionChanged(PlayerService ps, int msec);
+    }
+    private final ArrayList<OnPlaybackPositionChanged> _onPpc =
+            new ArrayList<>();
+
+    public void addPlaybackPositionListener(OnPlaybackPositionChanged l) {
+        _onPpc.add(l);
+        if (_lastState != null && _lastState != PlaybackState.STOPPED) {
+            l.onPlaybackPositionChanged(this, getPosition());
+        }
+    }
+
+    public void removePlaybackPositionListener(OnPlaybackPositionChanged l) {
+        _onPpc.remove(l);
+    }
+
+    private void announcePosition(int pos) {
+        if (_lastState != null && _lastState != PlaybackState.STOPPED) {
+            for (OnPlaybackPositionChanged l : _onPpc) {
+                l.onPlaybackPositionChanged(this, pos);
+            }
+        }
+    }
 
     public PlayerService() {
         m_player = new MediaPlayer();
         m_player.setOnPreparedListener(this);
+        m_player.setOnSeekCompleteListener(this);
+    }
+
+    private void startReportingPosition() {
+        if (m_doReschedule) {
+            return;
+        }
+
+        announcePosition(getPosition());
+
+        m_doReschedule = true;
+        int interval = 300;
+        m_handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                announcePosition(getPosition());
+                if (m_doReschedule) {
+                    m_handler.postDelayed(this, interval);
+                }
+            }
+        }, interval);
+    }
+
+    private void stopReportingPosition() {
+        m_doReschedule = false;
     }
 
     @Override
@@ -98,6 +187,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     private void stopForeground() {
+        stopReportingPosition();
         stopForeground(true);
         stopSelf();
     }
@@ -116,26 +206,39 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     public void stop() {
         m_player.stop();
+        announceState(PlaybackState.STOPPED);
         stopForeground();
     }
 
     public void pause() {
         m_player.pause();
+        announceState(PlaybackState.PAUSED);
+        stopReportingPosition();
     }
 
     public void resume() {
         m_player.start();
+        announceState(PlaybackState.PLAYING);
+        startReportingPosition();
     }
 
-    public void seekTo(long msec) {
-        m_player.seekTo((int)msec);  // TODO: do better on Android O +
+    public void seekTo(int msec) {
+        m_player.seekTo(msec);
+    }
+
+    public int getPosition() {
+        return m_player.getCurrentPosition();
+    }
+
+    public int getDuration() {
+        return m_player.getDuration();
     }
 
     public void togglePause() {
         if (m_player.isPlaying()) {
-            m_player.pause();
+            pause();
         } else {
-            m_player.start();
+            resume();
         }
     }
 
@@ -152,5 +255,15 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         Notification notif = makeNotification(title);
         NotificationManagerCompat nman = NotificationManagerCompat.from(this);
         nman.notify(NOTIF_ID, notif);
+
+        announceState(PlaybackState.PLAYING);
+        announcePosition(0);
+
+        startReportingPosition();
+    }
+
+    @Override
+    public void onSeekComplete(MediaPlayer mp) {
+        announcePosition(getPosition());
     }
 }

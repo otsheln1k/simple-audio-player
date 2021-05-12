@@ -9,15 +9,19 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
+import android.widget.TextView;
 
-public class PlayerActivity extends AppCompatActivity {
+import java.util.Locale;
+
+public class PlayerActivity extends AppCompatActivity implements PlayerService.OnPlaybackStateChanged, PlayerService.OnPlaybackPositionChanged {
 
     private PlayerService m_service = null;
-    private ServiceConnection m_conn = new ServiceConnection() {
+    private final ServiceConnection m_conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             PlayerService.Binder binder = (PlayerService.Binder)service;
             m_service = binder.service();
+            bindHandlers();
 
             if (m_uriToSend != null) {
                 m_service.setUri(m_uriToSend);
@@ -27,11 +31,22 @@ public class PlayerActivity extends AppCompatActivity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            unbindHandlers();
             m_service = null;
         }
     };
 
     private Uri m_uriToSend = null;
+
+    private void bindHandlers() {
+        m_service.addPlaybackStateListener(this);
+        m_service.addPlaybackPositionListener(this);
+    }
+
+    private void unbindHandlers() {
+        m_service.removePlaybackStateListener(this);
+        m_service.removePlaybackPositionListener(this);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +58,11 @@ public class PlayerActivity extends AppCompatActivity {
         if (suri != null) {
             m_uriToSend = Uri.parse(suri);
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
 
         Intent srvIntent = new Intent(this, PlayerService.class);
         startService(srvIntent);
@@ -52,12 +72,15 @@ public class PlayerActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        unbindService(m_conn);
+
+        if (m_service != null) {
+            unbindHandlers();
+            unbindService(m_conn);
+        }
     }
 
     public void stopPlayback(View view) {
         m_service.stop();
-        finish();
     }
 
     public void pausePlayback(View view) {
@@ -70,5 +93,38 @@ public class PlayerActivity extends AppCompatActivity {
 
     public void restartTrack(View view) {
         m_service.seekTo(0);
+    }
+
+    private void updatePosition(int msec) {
+        TextView progress = findViewById(R.id.progress);
+        int sec = (msec + 500) / 1000;
+        int total = (m_service.getDuration() + 500) / 1000;
+        progress.setText(String.format(
+                Locale.getDefault(),
+                "%d:%02d / %d:%02d",
+                sec / 60, sec % 60, total / 60, total % 60));
+    }
+
+    @Override
+    public void onPlaybackStateChanged(PlayerService ps,
+                                       PlayerService.PlaybackState st) {
+        switch (st) {
+            case STOPPED:
+                finish();
+                break;
+            case PLAYING:
+                findViewById(R.id.pausebutton).setEnabled(true);
+                findViewById(R.id.resumebutton).setEnabled(false);
+                break;
+            case PAUSED:
+                findViewById(R.id.pausebutton).setEnabled(false);
+                findViewById(R.id.resumebutton).setEnabled(true);
+                break;
+        }
+    }
+
+    @Override
+    public void onPlaybackPositionChanged(PlayerService ps, int msec) {
+        updatePosition(msec);
     }
 }
