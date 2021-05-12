@@ -25,13 +25,6 @@ public class PlayerService
         MediaPlayer.OnSeekCompleteListener,
         MediaPlayer.OnCompletionListener {
 
-    // TODO: read attached URI:
-    // 1. Load file
-    // 2. Extract title (or at least a basename)
-    // 3. Extract length
-    // 4. Start playing
-    // 5. Attach callback or something to update time
-
     public class Binder extends android.os.Binder {
         public PlayerService service() {
             return PlayerService.this;
@@ -50,7 +43,7 @@ public class PlayerService
     private Uri m_currentUri;
 
     private boolean m_doReschedule = false;
-    private Handler m_handler = new Handler (Looper.getMainLooper());
+    private final Handler m_handler = new Handler (Looper.getMainLooper());
 
     public enum PlaybackState {
         STOPPED,
@@ -205,7 +198,7 @@ public class PlayerService
     }
 
     private void goForeground() {
-        Notification notif = makeNotification("(nothing)");
+        Notification notif = makeNotification("(No track)");
         startForeground(NOTIF_ID, notif);
     }
 
@@ -262,14 +255,6 @@ public class PlayerService
 
     public int getDuration() {
         return m_player.getDuration();
-    }
-
-    public void togglePause() {
-        if (m_player.isPlaying()) {
-            pause();
-        } else {
-            resume();
-        }
     }
 
     @Override
