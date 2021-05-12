@@ -67,4 +67,8 @@ public class PlayerActivity extends AppCompatActivity {
     public void resumePlayback(View view) {
         m_service.resume();
     }
+
+    public void restartTrack(View view) {
+        m_service.seekTo(0);
+    }
 }

@@ -127,6 +127,10 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         m_player.start();
     }
 
+    public void seekTo(long msec) {
+        m_player.seekTo((int)msec);  // TODO: do better on Android O +
+    }
+
     public void togglePause() {
         if (m_player.isPlaying()) {
             m_player.pause();
