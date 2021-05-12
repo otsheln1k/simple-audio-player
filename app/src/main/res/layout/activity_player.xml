@@ -30,10 +30,32 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/pausebutton"
         app:layout_constraintRight_toRightOf="parent"
         android:layout_marginBottom="8dp"
         android:text="Stop"
-        android:onClick="stopPlaying" />
+        android:onClick="stopPlayback" />
+
+    <Button
+        android:id="@+id/pausebutton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/resumebutton"
+        app:layout_constraintRight_toLeftOf="@id/stopbutton"
+        android:layout_marginBottom="8dp"
+        android:text="Pause"
+        android:onClick="pausePlayback" />
+
+    <Button
+        android:id="@+id/resumebutton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/pausebutton"
+        android:layout_marginBottom="8dp"
+        android:text="Resume"
+        android:onClick="resumePlayback" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

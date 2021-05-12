@@ -119,6 +119,22 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         stopForeground();
     }
 
+    public void pause() {
+        m_player.pause();
+    }
+
+    public void resume() {
+        m_player.start();
+    }
+
+    public void togglePause() {
+        if (m_player.isPlaying()) {
+            m_player.pause();
+        } else {
+            m_player.start();
+        }
+    }
+
     @Override
     public IBinder onBind(Intent intent) {
         return new Binder();

@@ -55,8 +55,16 @@ public class PlayerActivity extends AppCompatActivity {
         unbindService(m_conn);
     }
 
-    public void stopPlaying(View view) {
+    public void stopPlayback(View view) {
         m_service.stop();
         finish();
+    }
+
+    public void pausePlayback(View view) {
+        m_service.pause();
+    }
+
+    public void resumePlayback(View view) {
+        m_service.resume();
     }
 }
