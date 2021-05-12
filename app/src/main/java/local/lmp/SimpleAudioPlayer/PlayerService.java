@@ -70,7 +70,9 @@ public class PlayerService
 
     private void announceState(PlaybackState s) {
         _lastState = s;
-        repostNotif();
+        if (s != PlaybackState.STOPPED) {
+            repostNotif();
+        }
         for (OnPlaybackStateChanged l : _onPsc) {
             l.onPlaybackStateChanged(this, s);
         }
@@ -219,18 +221,21 @@ public class PlayerService
         try {
             m_player.setDataSource(getApplicationContext(), uri);
         } catch (IOException e) {
-            // TODO
-            e.printStackTrace();
+            doStop();
             return;
         }
         m_currentUri = uri;
         m_player.prepareAsync();
     }
 
-    public void stop() {
-        m_player.stop();
+    private void doStop() {
         announceState(PlaybackState.STOPPED);
         stopForeground();
+    }
+
+    public void stop() {
+        m_player.stop();
+        doStop();
     }
 
     public void pause() {
@@ -281,7 +286,6 @@ public class PlayerService
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        announceState(PlaybackState.STOPPED);
-        stopForeground();
+        doStop();
     }
 }
