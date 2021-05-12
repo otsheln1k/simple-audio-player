@@ -22,7 +22,8 @@ import java.util.ArrayList;
 public class PlayerService
         extends Service
         implements MediaPlayer.OnPreparedListener,
-        MediaPlayer.OnSeekCompleteListener {
+        MediaPlayer.OnSeekCompleteListener,
+        MediaPlayer.OnCompletionListener {
 
     // TODO: read attached URI:
     // 1. Load file
@@ -107,6 +108,7 @@ public class PlayerService
         m_player = new MediaPlayer();
         m_player.setOnPreparedListener(this);
         m_player.setOnSeekCompleteListener(this);
+        m_player.setOnCompletionListener(this);
     }
 
     private void startReportingPosition() {
@@ -265,5 +267,11 @@ public class PlayerService
     @Override
     public void onSeekComplete(MediaPlayer mp) {
         announcePosition(getPosition());
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        announceState(PlaybackState.STOPPED);
+        stopForeground();
     }
 }
