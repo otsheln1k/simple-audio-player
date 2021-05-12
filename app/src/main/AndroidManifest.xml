@@ -11,29 +11,36 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.SimpleAudioPlayer">
-        <receiver
-            android:name=".PlayerBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true">
-        </receiver>
-
-        <service
-            android:name=".PlayerService"
-            android:enabled="true"
-            android:exported="true">
-        </service>
 
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".PlayerActivity"
             android:parentActivityName=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="audio/*" />
+            </intent-filter>
         </activity>
+
+        <service
+            android:name=".PlayerService"
+            android:enabled="true"
+            android:exported="false">
+        </service>
+
+        <receiver
+            android:name=".PlayerBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false">
+        </receiver>
+
     </application>
 
 </manifest>

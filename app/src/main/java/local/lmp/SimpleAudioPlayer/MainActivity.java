@@ -3,6 +3,7 @@ package local.lmp.SimpleAudioPlayer;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -45,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     public void play(View view) {
         Intent intent = new Intent(this, PlayerActivity.class);
         EditText pathedit = findViewById(R.id.pathedit);
-        intent.putExtra("uri", pathedit.getText().toString());
+        intent.setData(Uri.parse(pathedit.getText().toString()));
         startActivity(intent);
     }
 }

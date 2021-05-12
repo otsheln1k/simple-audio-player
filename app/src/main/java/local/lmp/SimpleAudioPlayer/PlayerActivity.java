@@ -54,10 +54,7 @@ public class PlayerActivity extends AppCompatActivity implements PlayerService.O
         setContentView(R.layout.activity_player);
 
         Intent intent = getIntent();
-        String suri = intent.getStringExtra("uri");
-        if (suri != null) {
-            m_uriToSend = Uri.parse(suri);
-        }
+        m_uriToSend = intent.getData();
     }
 
     @Override
