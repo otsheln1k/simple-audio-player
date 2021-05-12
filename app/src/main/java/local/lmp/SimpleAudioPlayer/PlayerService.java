@@ -142,6 +142,12 @@ public class PlayerService
         return super.onStartCommand(intent, flags, startId);
     }
 
+    private PendingIntent makeNotifBtnPintent(String action, int reqId) {
+        Intent intent = new Intent(this, PlayerBroadcastReceiver.class);
+        intent.setAction(action);
+        return PendingIntent.getBroadcast(this, reqId, intent, 0);
+    }
+
     private Notification makeNotification(String title) {
         PendingIntent srvPintent =
                 PendingIntent.getActivity(
@@ -174,20 +180,13 @@ public class PlayerService
         style.setShowActionsInCompactView(1);  // Stop button
         builder.setStyle(style);
 
-        Intent restartIntent = new Intent(this, PlayerBroadcastReceiver.class);
-        restartIntent.setAction(PlayerBroadcastReceiver.ACTION_RESTART);
-        PendingIntent restartPintent =
-                PendingIntent.getBroadcast(
-                        this, REQ_RESTART_PLAYBACK, restartIntent, 0);
         builder.addAction(R.drawable.ic_baseline_skip_previous_24, "Restart",
-                restartPintent);
+                makeNotifBtnPintent(PlayerBroadcastReceiver.ACTION_RESTART,
+                        REQ_RESTART_PLAYBACK));
 
-        Intent stopIntent = new Intent(this, PlayerBroadcastReceiver.class);
-        stopIntent.setAction(PlayerBroadcastReceiver.ACTION_STOP);
-        PendingIntent stopPintent =
-                PendingIntent.getBroadcast(
-                        this, REQ_STOP_PLAYBACK, stopIntent, 0);
-        builder.addAction(R.drawable.ic_baseline_stop_24, "Stop", stopPintent);
+        builder.addAction(R.drawable.ic_baseline_stop_24, "Stop",
+                makeNotifBtnPintent(PlayerBroadcastReceiver.ACTION_STOP,
+                        REQ_STOP_PLAYBACK));
 
         return builder.build();
     }
